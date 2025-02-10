@@ -44,7 +44,7 @@ class TrainingCreator():
         with open("data/complete_training_json_prompt.txt", "r") as file:
             content = file.read()
         content=content.replace("[[DOMAINE]]",field)
-        content=content.replace("[[NOM_CHAPITRE]]",chapter["name"])
+        content=content.replace("[[NOM_CHAPITRE]]",chapter["subject"])
         content=content.replace("[[SUJET]]",subject)
         #print the first two lines of content
         print(content[:300])
@@ -65,8 +65,8 @@ class TrainingCreator():
         chapter["reponses"] = json.loads(json_content_complete)["responses"]
         chapter["training_id"] = training_id
 
-        self.catalog_manager.add_chapter_to_training(chapter["name"], chapter["content"], chapter["question"], chapter["reponses"], chapter["training_id"])
-        print('chapter added to database : ',chapter["name"])
+        self.catalog_manager.add_chapter_to_training(chapter["subject"], chapter["content"], chapter["question"], chapter["reponses"], chapter["training_id"])
+        print('chapter added to database : ',chapter["subject"])
         
     
     def execute_in_parallel(self,subject,field,training:Training,training_json):
@@ -82,7 +82,7 @@ class TrainingCreator():
 
         
     def create_and_add_to_db(self,field:str,subject:str):
-        training = self.catalog_manager.create_training(subject, field, 'Un training sur ' + subject) #Training(db.cursor.lastrowid, name, field, description, chapters)
+        training = self.catalog_manager.create_training(subject, field, 'Un training sur ' + subject) #Training(db.cursor.lastrowid, subject, field, description, chapters)
         print("Training created and saved to database ")
 
         training_json = self.create_training_json(field,subject)

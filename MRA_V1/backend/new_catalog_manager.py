@@ -14,9 +14,9 @@ class Answer:
         return {"text": self.text, "valid": self.valid}
 
 class Chapter:
-    def __init__(self, chapter_id: int, name: str, content: str, question: str, answers: list[Answer],training_id:int):
+    def __init__(self, chapter_id: int, subject: str, content: str, question: str, answers: list[Answer],training_id:int):
         self.id = chapter_id
-        self.name = name
+        self.subject = subject
         self.content = content
         self.question = question
         self.answers = answers
@@ -28,7 +28,7 @@ class Chapter:
     def to_dict(self):
         return {
             "id": self.id,
-            "name": self.name,
+            "subject": self.subject,
             "content": self.content,
             "question": self.question,
             "answers": [answer.to_dict() for answer in self.answers],
@@ -36,15 +36,15 @@ class Chapter:
         }
 
 class Training:
-    def __init__(self, training_id: int, name: str, field: str, description: str, chapters: Optional[List['Chapter']] = None):
+    def __init__(self, training_id: int, subject: str, field: str, description: str, chapters: Optional[List['Chapter']] = None):
         self.id = training_id
-        self.name = name
+        self.subject = subject
         self.field = field
         self.description = description
         self.chapters = chapters if chapters is not None else []
 
-    def get_name(self) -> str:
-        return self.name
+    def get_subject(self) -> str:
+        return self.subject
 
     def get_field(self) -> str:
         return self.field
@@ -58,7 +58,7 @@ class Training:
     def to_dict(self):
         return {
             "id": self.id,
-            "name": self.name,
+            "subject": self.subject,
             "field": self.field,
             "description": self.description,
             "chapters": [chapter.to_dict() for chapter in self.chapters]
@@ -67,8 +67,8 @@ class Training:
 
 '''
 Useful functions in TrainingManager:
-- create_training(name: str, field: str, description: str) -> Training
-- add_chapter_to_training(name: str, content: str, question: str, answers: list[dict], training_id: int) -> Chapter
+- create_training(subject: str, field: str, description: str) -> Training
+- add_chapter_to_training(subject: str, content: str, question: str, answers: list[dict], training_id: int) -> Chapter
 - get_all_chapters_from_training(training_id: int) -> list[Chapter]
 - get_all_trainings() -> list[Training]
 - get_all_training_summaries() -> list[dict]
@@ -79,34 +79,34 @@ Useful functions in TrainingManager:
 '''
 
 class TrainingManager:
-    def create_training(self, name: str, field: str, description: str) -> Training:
+    def create_training(self, subject: str, field: str, description: str) -> Training:
         '''
-        chapters est maintenant une table de la forme (id, name, content, question(json), answer, training_id(fk) )
+        chapters est maintenant une table de la forme (id, subject, content, question(json), answer, training_id(fk) )
         chapters est donc ici donné en liste 
         '''
 
         with DBConnection() as db:
             
-            db.execute("INSERT INTO trainings (name, field, description) VALUES (?, ?, ?)", 
-                       (name, field, description))
+            db.execute("INSERT INTO trainings (subject, field, description) VALUES (?, ?, ?)", 
+                       (subject, field, description))
             db.commit()
 
-        return Training(db.cursor.lastrowid, name, field, description, [])
+        return Training(db.cursor.lastrowid, subject, field, description, [])
         
 
-    def add_chapter_to_training(self, name: str, content: str, question: str, answers: list[dict], training_id: int) -> Chapter:
+    def add_chapter_to_training(self, subject: str, content: str, question: str, answers: list[dict], training_id: int) -> Chapter:
         answers_json = json.dumps(answers)
         
         with DBConnection() as db: # Insert the chapter into the database
             db.execute(
-                "INSERT INTO chapters (name, content, question, answers, training_id) VALUES (?, ?, ?, ?, ?)", 
-                (name, content, question, answers_json, training_id)
+                "INSERT INTO chapters (subject, content, question, answers, training_id) VALUES (?, ?, ?, ?, ?)", 
+                (subject, content, question, answers_json, training_id)
             )
             db.commit()
 
         return Chapter(
             db.cursor.lastrowid, 
-            name, 
+            subject, 
             content, 
             question, 
             [Answer(ans["text"], ans["valid"]) for ans in answers], 
@@ -124,7 +124,7 @@ class TrainingManager:
         
         for chapter in chapters :
             answers = json.loads(chapter["answers"])
-            chapter_list.append(Chapter(chapter["id"], chapter["name"], chapter["content"], chapter["question"],[Answer(ans["text"], ans["valid"]) for ans in answers]),chapter['training_id'])
+            chapter_list.append(Chapter(chapter["id"], chapter["subject"], chapter["content"], chapter["question"],[Answer(ans["text"], ans["valid"]) for ans in answers]),chapter['training_id'])
 
 
         return chapter_list
@@ -139,20 +139,20 @@ class TrainingManager:
                 training_id = row['id']
                 chapter_list = self.get_all_chapters_from_training(training_id)
 
-                training = Training(row["id"], row["name"], row["field"], row["description"],chapter_list)
+                training = Training(row["id"], row["subject"], row["field"], row["description"],chapter_list)
                 trainings.append(training)
             return trainings
 
 
     def get_all_training_summaries(self) -> list[dict]:
         with DBConnection() as db:
-            db.execute("SELECT id, name, field, description FROM trainings")
+            db.execute("SELECT id, subject, field, description FROM trainings")
             rows = db.fetchall()
             training_summaries = []
             for row in rows:
                 training_summary = {
                     "id": row["id"],
-                    "name": row["name"],
+                    "subject": row["subject"],
                     "field": row["field"],
                     "description": row["description"]
                 }
@@ -174,7 +174,7 @@ class TrainingManager:
                 chapters = self.get_all_chapters_from_training(training_id)
                 return Training(
                             training_row["id"], 
-                            training_row["name"], 
+                            training_row["subject"], 
                             training_row["field"], 
                             training_row["description"], 
                             chapters
@@ -197,16 +197,16 @@ def main():
 
     new_chap1 = training_manager.add_chapter_to_training("Chapter 1", "Content 1", "Question 1", [{"text": 'qtxt1', "valid": True},{"text": 'qtxt2', "valid": False}],training_id)
     
-    print('chapter added : ',new_chap1.to_dict()['name'])
+    print('chapter added : ',new_chap1.to_dict()['subject'])
     
     '''trainings = training_manager.get_all_trainings()
     for training in trainings:
-        print("Training Name:", training.get_name())
+        print("Training subject:", training.get_subject())
         print("Field:", training.get_field())
         print("Description:", training.get_description())
         for chapter in training.get_chapters():
             print("Chapter ID:", chapter.id)
-            print("Name:", chapter.name)
+            print("subject:", chapter.subject)
             print("Content:", chapter.content)
             print("Question:", chapter.question)
             for answer in chapter.get_answers():
