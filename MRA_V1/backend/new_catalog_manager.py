@@ -199,18 +199,6 @@ def main():
     
     print('chapter added : ',new_chap1.to_dict()['subject'])
     
-    '''trainings = training_manager.get_all_trainings()
-    for training in trainings:
-        print("Training subject:", training.get_subject())
-        print("Field:", training.get_field())
-        print("Description:", training.get_description())
-        for chapter in training.get_chapters():
-            print("Chapter ID:", chapter.id)
-            print("subject:", chapter.subject)
-            print("Content:", chapter.content)
-            print("Question:", chapter.question)
-            for answer in chapter.get_answers():
-                print("answer:", answer.text, "Valid:", answer.valid)'''
 
 if __name__ == "__main__":
     main()
