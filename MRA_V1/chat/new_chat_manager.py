@@ -73,7 +73,6 @@ def create_training(subject: str, field: str, description : str) -> dict:
     return json.dumps(training.to_dict())
 
 
-
 @tool
 def subscribe_user_to_training(user_name: str, phone: str, program_id: str) -> dict:
     """
@@ -120,10 +119,8 @@ def main():
         # 5-> get_all_training_summary_for_field("Histoire") + get_all_training_summary_for_field("Géographie") + create_training("Archéologie", "Histoire")
     ]
 
-
-
-
     print("ToolCallingAgent:", agent.run(request[1]))
+
 
 if __name__ == "__main__":
     main()
