@@ -1,6 +1,6 @@
 **/.streamlit/secrets.toml
 .DS_Store
-
+.lock
 
 *.pyc
 **/supp.ipynb
