@@ -1,7 +1,6 @@
 # training_manager.py
 from backend.db import DBConnection
 import json
-from enum import Enum
 from typing import *
 
 
