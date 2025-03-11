@@ -103,18 +103,24 @@ class TrainingManager:
         )
 
 
-    def get_all_chapters_from_training(self,training_id):
+    def get_all_chapters_from_training(self, training_id):
         
-        with DBConnection as db :
-            db.execute("SELECT * FROM trainings WHERE id = ?", (training_id,))
+        with DBConnection() as db:
+            db.execute("SELECT * FROM chapters WHERE training_id = ?", (training_id,))
             chapters = db.fetchall()
         
         chapter_list = []
         
-        for chapter in chapters :
+        for chapter in chapters:
             answers = json.loads(chapter["answers"])
-            chapter_list.append(Chapter(chapter["id"], chapter["subject"], chapter["content"], chapter["question"],[Answer(ans["text"], ans["valid"]) for ans in answers]),chapter['training_id'])
-
+            chapter_list.append(Chapter(
+                chapter["id"], 
+                chapter["subject"], 
+                chapter["content"], 
+                chapter["question"],
+                [Answer(ans["text"], ans["valid"]) for ans in answers],
+                chapter['training_id']
+            ))
 
         return chapter_list
         

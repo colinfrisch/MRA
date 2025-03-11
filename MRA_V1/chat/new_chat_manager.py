@@ -2,7 +2,7 @@ from typing import Optional
 import os, toml
 import json
 from openai import OpenAI
-from backend.catalog_manager import TrainingManager
+from backend.new_catalog_manager import TrainingManager
 from backend.user_manager import UserManager
 from backend.training_creator import TrainingCreator
 import toml
@@ -97,30 +97,91 @@ def subscribe_user_to_training(user_name: str, phone: str, program_id: str) -> d
 
 
 
+class ChatAgent:
+    def __init__(self):
+        # Load the select prompt
+        with open("chat/select_prompt.txt", "r") as f:
+            self.prompt = f.read()
+            
+        self.agent = ToolCallingAgent(
+            tools=[
+                get_training_list,
+                get_all_training_summary_for_field,
+                create_training,
+                subscribe_user_to_training
+            ], 
+            model=model,
+            system_prompt=self.prompt
+        )
+        self.messages = []
+        self.is_finished = False
+        
+    def get_next_message(self):
+        # Initial message to start the conversation
+        initial_message = {
+            "role": "assistant",
+            "content": "Bonjour ! Je suis là pour vous aider à choisir une formation. Quel sujet vous intéresse ?",
+            "display": True
+        }
+        self.messages.append(initial_message)
+        return initial_message
+        
+    def get_messages(self):
+        return self.messages
+        
+    def respond_to_user(self, user_input):
+        user_message = {
+            "role": "user",
+            "content": user_input,
+            "display": True
+        }
+        self.messages.append(user_message)
+        
+        # Get response from agent
+        response = self.agent.run(user_input)
+        
+        # Check if we should finish the session
+        if "user_name" in response and "training_id" in response:
+            self.is_finished = True
+            # Extract the JSON data
+            assistant_message = {
+                "role": "assistant",
+                "content": f"Parfait ! Vous allez maintenant commencer votre formation.",
+                "display": True,
+                "json": {
+                    "user_name": response["user_name"],
+                    "training_id": response["training_id"]
+                }
+            }
+        else:
+            assistant_message = {
+                "role": "assistant",
+                "content": response,
+                "display": True
+            }
+            
+        self.messages.append(assistant_message)
+        return assistant_message
+        
+    def is_session_finished(self):
+        return self.is_finished
+
 def main():
     #Creating and calling the agent
-    agent = ToolCallingAgent(tools=[get_training_list,get_all_training_summary_for_field,create_training,subscribe_user_to_training], model=model)
-
-    request = ["J'aimerais me former encore davantage en Sociologie et j'ai déjà suivi les cours ici présents. Peux tu créer un cours qui n'existe pas déjà ?",
+    agent = ChatAgent()
+    agent.get_next_message()
+    
+    for request in [
+        "J'aimerais me former en Sociologie",
+        "Je suis Colin, mon numéro est le 01234567 et j'aimerais m'inscrire au cours Introduction à la Sociologie"
+    ]:
+        print(f"User: {request}")
+        response = agent.respond_to_user(request)
+        print(f"Assistant: {response['content']}")
         
-        "Je suis Colin, mon numéro est le 01234567 et j'aimerais m'inscrire à un cours de Médecine déjà existant et m'inscrire immédiatement. Pouvez-vous le faire ?",  
-        # 1-> get_all_training_summary_for_field("Science") + subscribe_user_to_training(nom, téléphone, program_id)
-
-        "J'aimerais en savoir plus sur les formations en économie et en Médecine. Pouvez-vous me donner les programmes disponibles ?",  
-        # 2-> get_all_training_summary_for_field("Économie") + get_all_training_summary_for_field("Sociologie")
-
-        "Je veux créer un programme sur la cybersécurité dans le domaine de l'informatique et m'y inscrire immédiatement. Pouvez-vous le faire ?",  
-        # 3-> create_training("Cybersécurité", "Informatique") + subscribe_user_to_training(nom, téléphone, program_id)
-
-        "Quels sont tous les programmes disponibles ? J'aimerais m'inscrire à un en histoire.",  
-        # 4-> get_training_list() + subscribe_user_to_training(nom, téléphone, program_id)
-
-        "Pouvez-vous me lister les formations en histoire et géographie et créer une nouvelle formation sur l'archéologie ?",  
-        # 5-> get_all_training_summary_for_field("Histoire") + get_all_training_summary_for_field("Géographie") + create_training("Archéologie", "Histoire")
-    ]
-
-    print("ToolCallingAgent:", agent.run(request[1]))
-
+        if agent.is_session_finished():
+            print("Session finished with:", response.get("json", {}))
+            break
 
 if __name__ == "__main__":
     main()

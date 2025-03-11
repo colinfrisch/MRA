@@ -2,8 +2,8 @@ import sqlite3
 
 class DBConnection:
     def __enter__(self):
-        # Connect to (or create) the database file
-        self.conn = sqlite3.connect("mydatabase.db")
+        # Connect to (or create) the database file in the backend directory
+        self.conn = sqlite3.connect("backend/mydatabase.db")
         
         # Optional: Row factory so we get dict-like row objects
         self.conn.row_factory = sqlite3.Row

@@ -7,20 +7,20 @@ CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL,
     phone TEXT NOT NULL,
-    current_training TEXT -- storing JSON as TEXT
+    current_training TEXT, -- storing JSON as TEXT
+    finished_training TEXT -- storing JSON as TEXT
 );
 
 CREATE TABLE IF NOT EXISTS trainings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
+    subject TEXT NOT NULL,
     field TEXT NOT NULL,
-    description TEXT NOT NULL,
-    chapters TEXT -- storing JSON as TEXT
+    description TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS chapters (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
+    subject TEXT NOT NULL,
     content TEXT NOT NULL,
     question TEXT NOT NULL, 
     answers TEXT NOT NULL, -- storing JSON as TEXT

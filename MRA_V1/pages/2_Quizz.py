@@ -1,6 +1,6 @@
 import streamlit as st
 from backend.user_manager import UserManager
-from backend.catalog_manager import TrainingManager
+from backend.new_catalog_manager import TrainingManager
 
 
 def main():
@@ -42,8 +42,8 @@ def main():
       for chapter in training.get_chapters():
           if chapter.id not in chapters_done:
               chapterId = chapter.id
+              st.session_state["ch"] = chapterId
               break
-          st.session_state["ch"] = chapterId
 
     for chapter in training.get_chapters():
       if chapter.id == chapterId:
@@ -53,25 +53,24 @@ def main():
         st.success("You have completed all chapters in this training!")
         return
 
-    st.header(f"{next_chapter.name}")
+    st.header(f"{next_chapter.subject}")
     st.write(next_chapter.content)
     st.write(next_chapter.question)
 
-    selected_response = st.radio("Select your response:", [response.text for response in next_chapter.get_responses()])
+    selected_response = st.radio("Select your response:", [answer.text for answer in next_chapter.get_answers()])
 
     if st.button("Submit"):
         success = False
-        for response in next_chapter.get_responses():
-            if response.text == selected_response:
-                if response.valid:
+        for answer in next_chapter.get_answers():
+            if answer.text == selected_response:
+                if answer.valid:
                     st.success("Correct answer!")
                     success = True
                 else:
                     st.error("Incorrect answer.")
                 break
         user_manager.set_chapter_finished(user.id, next_chapter.id, success)
-        if st.button("Essayer une autre question"):
-            st.switch_page(f"pages/2_Quizz.py")
+        st.button("Essayer une autre question", on_click=lambda: st.switch_page(f"pages/2_Quizz.py"))
 
 if __name__ == "__main__":
     main()

@@ -1,12 +1,12 @@
 from openai import OpenAI
 import streamlit as st
-from chat.chat_manager import ChatManager
+from chat.new_chat_manager import ChatAgent
 
 def main():
   st.title("Training")
 
   if "chatmgr" not in st.session_state:
-        client =  ChatManager()
+        client = ChatAgent()
         client.get_next_message()
         st.session_state["chatmgr"] = client
         
